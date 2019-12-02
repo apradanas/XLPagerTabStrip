@@ -30,6 +30,8 @@ open class BaseButtonBarPagerTabStripViewController<ButtonBarCellType: UICollect
     public var buttonBarItemSpec: ButtonBarItemSpec<ButtonBarCellType>!
     public var changeCurrentIndex: ((_ oldCell: ButtonBarCellType?, _ newCell: ButtonBarCellType?, _ animated: Bool) -> Void)?
     public var changeCurrentIndexProgressive: ((_ oldCell: ButtonBarCellType?, _ newCell: ButtonBarCellType?, _ progressPercentage: CGFloat, _ changeCurrentIndex: Bool, _ animated: Bool) -> Void)?
+    
+    private var currentOldCell: ButtonBarCellType? = nil
 
     @IBOutlet public weak var buttonBarView: ButtonBarView!
 
@@ -189,7 +191,8 @@ open class BaseButtonBarPagerTabStripViewController<ButtonBarCellType: UICollect
         if let changeCurrentIndexProgressive = changeCurrentIndexProgressive {
             let oldCell = buttonBarView.cellForItem(at: IndexPath(item: currentIndex != fromIndex ? fromIndex : toIndex, section: 0)) as? ButtonBarCellType
             let newCell = buttonBarView.cellForItem(at: IndexPath(item: currentIndex, section: 0)) as? ButtonBarCellType
-            changeCurrentIndexProgressive(oldCell, newCell, progressPercentage, indexWasChanged, true)
+            changeCurrentIndexProgressive(oldCell ?? currentOldCell, newCell, progressPercentage, indexWasChanged, true)
+            currentOldCell = newCell
         }
     }
 
@@ -212,13 +215,15 @@ open class BaseButtonBarPagerTabStripViewController<ButtonBarCellType: UICollect
         let newCell = buttonBarView.cellForItem(at: IndexPath(item: indexPath.item, section: 0)) as? ButtonBarCellType
         if pagerBehaviour.isProgressiveIndicator {
             if let changeCurrentIndexProgressive = changeCurrentIndexProgressive {
-                changeCurrentIndexProgressive(oldCell, newCell, 1, true, true)
+                changeCurrentIndexProgressive(oldCell ?? currentOldCell, newCell, 1, true, true)
             }
         } else {
             if let changeCurrentIndex = changeCurrentIndex {
                 changeCurrentIndex(oldCell, newCell, true)
             }
         }
+        
+        currentOldCell = newCell
         moveToViewController(at: indexPath.item)
     }
 
